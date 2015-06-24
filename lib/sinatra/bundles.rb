@@ -52,23 +52,29 @@ module Sinatra
       app.helpers(Helpers)
 
       app.get(%r{/#{Regexp.quote(app.stylesheets)}/bundles/(\w+)(?:/(\d+))?\.css}) do |bundle, stamp| # Don't really care about the stamp.
+        bundled_copy = settings.stylesheet_bundles[bundle.intern]
+        halt 404 unless bundled_copy
+
         content_type('text/css')
         headers['Vary'] = 'Accept-Encoding'
         if settings.cache_bundles
           expires(settings.bundle_cache_time, :public, :must_revalidate)
-          etag(settings.stylesheet_bundles[bundle.intern].etag)
+          etag(bundled_copy.etag)
         end
-        settings.stylesheet_bundles[bundle.intern].content
+        bundled_copy.content
       end
 
       app.get(%r{/#{Regexp.quote(app.javascripts)}/bundles/(\w+)(?:/(\d+))?\.js}) do |bundle, stamp| # Don't really care about the stamp.
+        bundled_copy = settings.javascript_bundles[bundle.intern]
+        halt 404 unless bundled_copy
+
         content_type('application/javascript')
         headers['Vary'] = 'Accept-Encoding'
         if settings.cache_bundles
           expires(settings.bundle_cache_time, :public, :must_revalidate)
-          etag(settings.javascript_bundles[bundle.intern].etag)
+          etag(bundled_copy.etag)
         end
-        settings.javascript_bundles[bundle.intern].content
+        bundled_copy.content
       end
     end
   end
